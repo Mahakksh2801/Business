@@ -1,0 +1,19 @@
+{
+  "name": "crore-city",
+  "version": "1.0.0",
+  "description": "Online multiplayer property-trading board game with Indian cities, money in crores",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/fuzz.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ws": "^8.23.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
