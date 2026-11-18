@@ -123,3 +123,5 @@ On Render's free plan the server sleeps after about 15 minutes with no visitors,
 ## Credits
 
 An original game design: board layout, city sets, card text, names and visuals are all original. Built with help from Claude.
+
+Map of India from [svg-maps](https://github.com/VictorCazanave/svg-maps) by Victor Cazanave, licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (colours changed).

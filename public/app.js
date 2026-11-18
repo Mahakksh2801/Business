@@ -3,8 +3,8 @@
 // ================= data =================
 let BOARD = [], GROUPS = {}, COLORS = [];
 const SHORT = { 'CST Mumbai Railway': 'CST Mumbai Rly', 'Howrah Railway': 'Howrah Rly', 'New Delhi Railway': 'New Delhi Rly', 'Chennai Central Railway': 'Chennai Central Rly', 'Lockup / Visitor': 'Lockup / Visitor', 'Festival Holiday': 'Festival Holiday' };
-const ICON = { go: '💵', chest: '🏛️', chance: '🌀', tax: '🧾', rail: '🚆', jail: '🔐', free: '🪔', gotojail: '🚨' };
-const UTIL_ICON = { 'Power Grid': '⚡', 'Jal Board': '💧' };
+const ICON = { go: '💵', chest: '🏛️', chance: '🃏', tax: '🧾', rail: '🚆', jail: '🔐', free: '🪔', gotojail: '🚨' };
+const UTIL_ICON = { 'Power Grid': '⚡', 'Water Board': '💧' };
 
 const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -150,8 +150,8 @@ function shareLink() { return `${location.origin}/r/${S.code}`; }
 function previewBoard(st) {
   const saved = S; S = st;
   try {
-    const sq = BOARD.map(s => { const [r, c, side] = coord(s.i); const corner = [0, 10, 20, 30].includes(s.i); return `<div class="sq ${corner ? 'corner' : 'side-b'}" style="grid-row:${r};grid-column:${c}">${sqHTML(s)}</div>`; }).join('');
-    return `<div class="boardwrap preview"><div class="board">${sq}<div class="center"><div class="gname">CRORE CITY</div><div class="muted" style="font-size:clamp(10px,2.4cqi,15px)">Board preview</div></div></div></div>`;
+    const sq = BOARD.map(s => { const [r, c, side] = coord(s.i); const corner = [0, 10, 20, 30].includes(s.i); return `<div class="sq ${corner ? 'corner' : 'side-' + side}" style="grid-row:${r};grid-column:${c}">${sqHTML(s)}</div>`; }).join('');
+    return `<div class="boardwrap preview"><div class="board">${sq}<div class="center"><img class="indiamap" src="/india.svg" alt="" aria-hidden="true"><div class="gname">CRORE CITY</div><div class="muted" style="font-size:clamp(10px,2.4cqi,15px)">Board preview</div></div></div></div>`;
   } finally { S = saved; }
 }
 function renderLobby() {
@@ -209,13 +209,13 @@ function buildGame() {
     const [r, c, side] = coord(s.i);
     const d = document.createElement('div');
     const corner = [0, 10, 20, 30].includes(s.i);
-    d.className = `sq ${corner ? 'corner' : 'side-b'}`; d.id = 'sq' + s.i;
+    d.className = `sq ${corner ? 'corner' : 'side-' + side}`; d.id = 'sq' + s.i;
     d.style.gridRow = r; d.style.gridColumn = c;
     d.onclick = () => openDeed(s.i);
     b.appendChild(d);
   });
   const center = document.createElement('div'); center.className = 'center'; center.id = 'center';
-  center.innerHTML = `<div class="gname">CRORE CITY</div><div class="dicebox"><div class="tosser" id="t1"><div class="cube" id="d1"></div></div><div class="tosser" id="t2"><div class="cube" id="d2"></div></div></div><div id="cardshow"></div>`;
+  center.innerHTML = `<img class="indiamap" src="/india.svg" alt="" aria-hidden="true"><div class="gname">CRORE CITY</div><div class="dicebox"><div class="tosser" id="t1"><div class="cube" id="d1"></div></div><div class="tosser" id="t2"><div class="cube" id="d2"></div></div></div><div id="cardshow"></div>`;
   b.appendChild(center);
   buildCube($('#d1')); buildCube($('#d2')); setCube($('#d1'), 1, false); setCube($('#d2'), 2, false);
 }
@@ -259,7 +259,7 @@ function sqHTML(s) {
   const price = s.price ? (owner ? esc(owner.name.slice(0, 6)) : fmt(s.price).replace('₹', '₹').replace(' Cr', 'Cr')) : (s.amount ? fmt(s.amount).replace(' Cr', 'Cr') : '');
   const toks = S.players.filter(p => !p.bankrupt && p.pos === s.i).map(p => `<span class="tok ${p.id === me ? 'me' : ''} ${cur()?.id === p.id ? 'turn' : ''}" style="background:${p.color}" title="${esc(p.name)}"></span>`).join('');
   const jailNote = s.i === 10 && S.players.some(p => p.inJail && !p.bankrupt) ? `<div class="pr">🔒 ${S.players.filter(p => p.inJail && !p.bankrupt).length} inside</div>` : '';
-  return `${band}<div class="txt">${ic ? `<div class="ic">${ic}</div>` : ''}<div class="nm">${nm}</div>${jailNote}<div class="pr">${price}</div></div><div class="tokens">${toks}</div>`;
+  return `<div class="inner">${band}<div class="txt">${ic ? `<div class="ic">${ic}</div>` : ''}<div class="nm">${nm}</div>${jailNote}<div class="pr">${price}</div></div><div class="tokens">${toks}</div></div>`;
 }
 
 function renderGame() {
@@ -278,7 +278,7 @@ function renderGame() {
   });
   const c = cur();
   setHTML($('#turnline'), S.status === 'ended' ? (S.winner ? `🏆 ${esc(P(S.winner)?.name || '')} wins!` : 'Practice game over') : `<span class="dot" style="background:${c.color}"></span> ${c.id === me ? 'Your turn' : esc(c.name) + "'s turn"}${c.connected ? '' : ' (offline)'}`);
-  setHTML($('#cardshow'), S.card ? `<div class="cardshow ${S.card.deck}"><b>${S.card.deck === 'chance' ? '🌀 Twist' : '🏛️ City Fund'}</b><br>${esc(S.card.text)}</div>` : '');
+  setHTML($('#cardshow'), S.card ? `<div class="cardshow ${S.card.deck}"><b>${S.card.deck === 'chance' ? '🃏 Twist' : '🏛️ City Fund'}</b><br>${esc(S.card.text)}</div>` : '');
   renderAction();
   renderTabs();
 }
@@ -532,6 +532,13 @@ function openIncoming(id) {
   $('#tCounter', r).onclick = () => openCompose({ to: t.from, replaces: t.id, give: { ...t.get, props: [...t.get.props] }, get: { ...t.give, props: [...t.give.props] } });
 }
 
+// keep rotated side-square contents sized to the real square
+const boardRO = new ResizeObserver(es => es.forEach(e => sizeBoard(e.target)));
+function sizeBoard(b) {
+  const s = b.querySelector('.side-l'); if (!s) return;
+  b.style.setProperty('--w', s.clientWidth + 'px'); b.style.setProperty('--h', s.clientHeight + 'px');
+}
+new MutationObserver(() => document.querySelectorAll('.board').forEach(b => { if (!b._ro) { b._ro = 1; boardRO.observe(b); } sizeBoard(b); })).observe(document.getElementById('app'), { childList: true, subtree: false });
 // ================= boot =================
 fetch('/board.json').then(r => r.json()).then(d => {
   BOARD = d.board; GROUPS = d.groups; COLORS = d.colors;

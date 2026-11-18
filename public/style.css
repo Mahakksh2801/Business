@@ -74,11 +74,12 @@ h1,h2,h3{margin:.2em 0 .4em}
 .tok.turn{animation:pulse 1s infinite alternate}
 @keyframes pulse{to{transform:scale(1.25)}}
 /* side orientation: band toward the center */
-.side-l{flex-direction:row-reverse}.side-l .band{width:22%;height:100%;flex-direction:column}
-.side-r{flex-direction:row}.side-r .band{width:22%;height:100%;flex-direction:column}
-.side-t{flex-direction:column-reverse}
-.side-l .txt,.side-r .txt{flex:1;display:flex;flex-direction:column;justify-content:center;min-width:0;height:100%}
-.side-t .txt,.side-b .txt{flex:1;display:flex;flex-direction:column;width:100%;min-height:0}
+.sq .inner{position:absolute;left:50%;top:50%;width:calc(100% - 0px);height:100%;transform:translate(-50%,-50%) rotate(var(--rot,0deg));display:flex;flex-direction:column;align-items:center;text-align:center}
+.side-l{--rot:90deg}.side-r{--rot:-90deg}.side-t{--rot:180deg}
+.side-l .inner,.side-r .inner{width:var(--h,8.2cqi);height:var(--w,11.9cqi)}
+.sq.corner .inner{left:0;top:0;width:100%;height:100%;transform:none;justify-content:center}
+.sq .txt{flex:1;display:flex;flex-direction:column;width:100%;min-height:0}
+.sq.corner .txt{flex:none}
 .center{grid-column:2/11;grid-row:2/11;background:var(--center);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2cqi;padding:2cqi;position:relative}
 .center .gname{font-size:6cqi;font-weight:900;color:var(--brand);letter-spacing:.05em;transform:rotate(-8deg)}
 .center .turnline{font-size:clamp(11px,2.6cqi,18px);font-weight:700;text-align:center}
@@ -170,3 +171,6 @@ h1,h2,h3{margin:.2em 0 .4em}
 .boardwrap.preview{max-width:100%;margin-top:6px}
 .home{max-width:560px}
 .sq.corner .tokens{inset:auto 0 4% 0;transform:none}
+.center .indiamap{position:absolute;left:50%;top:50%;height:80%;width:auto;max-width:80%;transform:translate(-50%,-50%);opacity:.9;filter:drop-shadow(0 .4cqi .8cqi rgba(15,76,69,.25));pointer-events:none;z-index:0}
+.center>*:not(.indiamap){position:relative;z-index:1}
+.center .gname{text-shadow:0 0 .6cqi #fff,0 0 1.2cqi rgba(255,255,255,.9)}
