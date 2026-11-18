@@ -49,7 +49,7 @@ Everyone starts with **₹15 Cr** and collects **₹2 Cr** each time they pass *
 ### Rules
 - Dice with doubles (three doubles in a row sends you to the Lockup)
 - The Lockup: roll doubles, pay ₹0.5 Cr bail, or use a Bail Pass; pay after three failed tries
-- 8 colour sets (the top Metros set is Bengaluru, Delhi and Mumbai), 4 railways, 2 utilities, GST Bill and Wealth Tax squares, Festival Holiday
+- 8 colour sets (the top Metros set is Delhi and Mumbai), 4 railways, 2 utilities, GST Bill and Wealth Tax squares, Festival Holiday
 - 32 original **Twist** and **City Fund** cards
 - Full colour set doubles base rent; ◆ houses and ★ hotels with the even-build rule and a limited bank supply (32 / 12)
 - **Mortgage** any property without buildings for half its price; **unmortgage** for that amount plus 10%. Mortgaged cities collect no rent and are hatched on the board
