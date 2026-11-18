@@ -2,7 +2,7 @@
 (() => {
 // ================= data =================
 let BOARD = [], GROUPS = {}, COLORS = [];
-const SHORT = { 'Thiruvananthapuram': 'Trivandrum', 'CST Mumbai Railway': 'CST Mumbai Rly', 'Howrah Railway': 'Howrah Rly', 'New Delhi Railway': 'New Delhi Rly', 'Chennai Central Railway': 'Chennai Central Rly', 'Lockup / Visitor': 'Lockup / Visitor', 'Festival Holiday': 'Festival Holiday' };
+const SHORT = { 'CST Mumbai Railway': 'CST Mumbai Rly', 'Howrah Railway': 'Howrah Rly', 'New Delhi Railway': 'New Delhi Rly', 'Chennai Central Railway': 'Chennai Central Rly', 'Lockup / Visitor': 'Lockup / Visitor', 'Festival Holiday': 'Festival Holiday' };
 const ICON = { go: '💵', chest: '🏛️', chance: '🌀', tax: '🧾', rail: '🚆', jail: '🔐', free: '🪔', gotojail: '🚨' };
 const UTIL_ICON = { 'Power Grid': '⚡', 'Jal Board': '💧' };
 
@@ -150,7 +150,7 @@ function shareLink() { return `${location.origin}/r/${S.code}`; }
 function previewBoard(st) {
   const saved = S; S = st;
   try {
-    const sq = BOARD.map(s => { const [r, c, side] = coord(s.i); const corner = [0, 10, 20, 30].includes(s.i); return `<div class="sq ${corner ? 'corner' : 'side-' + side}" style="grid-row:${r};grid-column:${c}">${sqHTML(s)}</div>`; }).join('');
+    const sq = BOARD.map(s => { const [r, c, side] = coord(s.i); const corner = [0, 10, 20, 30].includes(s.i); return `<div class="sq ${corner ? 'corner' : 'side-b'}" style="grid-row:${r};grid-column:${c}">${sqHTML(s)}</div>`; }).join('');
     return `<div class="boardwrap preview"><div class="board">${sq}<div class="center"><div class="gname">CRORE CITY</div><div class="muted" style="font-size:clamp(10px,2.4cqi,15px)">Board preview</div></div></div></div>`;
   } finally { S = saved; }
 }
@@ -209,13 +209,13 @@ function buildGame() {
     const [r, c, side] = coord(s.i);
     const d = document.createElement('div');
     const corner = [0, 10, 20, 30].includes(s.i);
-    d.className = `sq ${corner ? 'corner' : 'side-' + side}`; d.id = 'sq' + s.i;
+    d.className = `sq ${corner ? 'corner' : 'side-b'}`; d.id = 'sq' + s.i;
     d.style.gridRow = r; d.style.gridColumn = c;
     d.onclick = () => openDeed(s.i);
     b.appendChild(d);
   });
   const center = document.createElement('div'); center.className = 'center'; center.id = 'center';
-  center.innerHTML = `<div class="gname">CRORE CITY</div><div class="dicebox"><div class="tosser" id="t1"><div class="cube" id="d1"></div></div><div class="tosser" id="t2"><div class="cube" id="d2"></div></div></div><div class="rolltotal" id="rolltotal"></div><div class="turnline" id="turnline"></div><div id="cardshow"></div>`;
+  center.innerHTML = `<div class="gname">CRORE CITY</div><div class="dicebox"><div class="tosser" id="t1"><div class="cube" id="d1"></div></div><div class="tosser" id="t2"><div class="cube" id="d2"></div></div></div><div id="cardshow"></div>`;
   b.appendChild(center);
   buildCube($('#d1')); buildCube($('#d2')); setCube($('#d1'), 1, false); setCube($('#d2'), 2, false);
 }
@@ -235,18 +235,14 @@ function setCube(el, n, tumble) {
 }
 function spinDice() { // instant feedback while waiting for the server
   ['#d1', '#d2'].forEach(s => { const d = $(s); if (d) d.classList.add('spin'); });
-  const t = $('#rolltotal'); if (t) t.classList.remove('show');
+  
 }
 function animateDice(roll, anim) {
   const d1 = $('#d1'), d2 = $('#d2'); if (!d1) return;
-  const tot = $('#rolltotal');
-  const label = `${roll.d1} + ${roll.d2} = ${roll.d1 + roll.d2}${roll.d1 === roll.d2 ? '<span class="dbl">DOUBLES!</span>' : ''}`;
   d1.classList.remove('spin'); d2.classList.remove('spin');
-  if (!anim) { setCube(d1, roll.d1, false); setCube(d2, roll.d2, false); tot.innerHTML = label; tot.classList.add('show'); return; }
-  tot.classList.remove('show');
+  if (!anim) { setCube(d1, roll.d1, false); setCube(d2, roll.d2, false); return; }
   ['#t1', '#t2'].forEach((s, i) => { const t = $(s); t.classList.remove('toss-l', 'toss-r'); void t.offsetWidth; t.classList.add(i ? 'toss-r' : 'toss-l'); });
   requestAnimationFrame(() => { setCube(d1, roll.d1, true); setCube(d2, roll.d2, true); });
-  setTimeout(() => { tot.innerHTML = label; tot.classList.add('show'); }, 1250);
 }
 function flashSq(i) { const e = $('#sq' + i); if (!e) return; e.classList.remove('hl'); void e.offsetWidth; e.classList.add('hl'); }
 
@@ -263,7 +259,7 @@ function sqHTML(s) {
   const price = s.price ? (owner ? esc(owner.name.slice(0, 6)) : fmt(s.price).replace('₹', '₹').replace(' Cr', 'Cr')) : (s.amount ? fmt(s.amount).replace(' Cr', 'Cr') : '');
   const toks = S.players.filter(p => !p.bankrupt && p.pos === s.i).map(p => `<span class="tok ${p.id === me ? 'me' : ''} ${cur()?.id === p.id ? 'turn' : ''}" style="background:${p.color}" title="${esc(p.name)}"></span>`).join('');
   const jailNote = s.i === 10 && S.players.some(p => p.inJail && !p.bankrupt) ? `<div class="pr">🔒 ${S.players.filter(p => p.inJail && !p.bankrupt).length} inside</div>` : '';
-  return `${band}<div class="txt">${ic ? `<div class="ic">${ic}</div>` : ''}<div class="nm ${(SHORT[s.name] || s.name).split(' ').some(w => w.length >= 9) ? 'long' : ''}">${nm}</div>${jailNote}<div class="pr">${price}</div></div><div class="tokens">${toks}</div>`;
+  return `${band}<div class="txt">${ic ? `<div class="ic">${ic}</div>` : ''}<div class="nm">${nm}</div>${jailNote}<div class="pr">${price}</div></div><div class="tokens">${toks}</div>`;
 }
 
 function renderGame() {
