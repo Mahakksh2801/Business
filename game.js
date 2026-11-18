@@ -48,8 +48,8 @@ const BOARD = [
   P('Thiruvananthapuram', 'indigo', 220, [18, 90, 250, 700, 875, 1050], 150),
   P('Coimbatore', 'indigo', 240, [20, 100, 300, 750, 925, 1100], 150),
   { type: 'rail', name: 'New Delhi Railway', price: 200 },
+  { type: 'chance', name: 'Twist' },
   P('Ahmedabad', 'sand', 260, [22, 110, 330, 800, 975, 1150], 150),
-  P('Surat', 'sand', 260, [22, 110, 330, 800, 975, 1150], 150),
   { type: 'util', name: 'Jal Board', price: 150 },
   P('Pune', 'sand', 280, [24, 120, 360, 850, 1025, 1200], 150),
   { type: 'gotojail', name: 'Go to Lockup' },
@@ -58,10 +58,10 @@ const BOARD = [
   { type: 'chest', name: 'City Fund' },
   P('Kolkata', 'plum', 320, [28, 150, 450, 1000, 1200, 1400], 200),
   { type: 'rail', name: 'Chennai Central Railway', price: 200 },
-  { type: 'chance', name: 'Twist' },
   P('Bengaluru', 'gold', 350, [35, 175, 500, 1100, 1300, 1500], 200),
+  P('Delhi', 'gold', 350, [35, 175, 500, 1100, 1300, 1500], 200),
   { type: 'tax', name: 'Wealth Tax', amount: 100 },
-  P('Delhi', 'gold', 400, [50, 200, 600, 1400, 1700, 2000], 200),
+  P('Mumbai', 'gold', 400, [50, 200, 600, 1400, 1700, 2000], 200),
 ];
 BOARD.forEach((s, i) => { s.i = i; });
 const OWNABLE = BOARD.filter(s => s.price).map(s => s.i);
@@ -72,7 +72,7 @@ const UTILS = BOARD.filter(s => s.type === 'util').map(s => s.i);
 
 const CHANCE = [
   { text: 'Surprise bonus! Walk straight to Payday and pocket ₹2 Cr.', go: 0 },
-  { text: 'Your startup opens a Delhi office. Move to Delhi.', go: 39 },
+  { text: 'Your startup opens a Mumbai office. Move to Mumbai.', go: 39 },
   { text: 'A wedding invitation from Jaipur! Travel there, collecting ₹2 Cr if you cross Payday.', go: 11 },
   { text: 'Backwater holiday: head to Kochi, collecting ₹2 Cr if you cross Payday.', go: 21 },
   { text: 'Catch the next train! Move to the closest railway. If someone owns it, pay them double fare.', nearest: 'rail' },
@@ -268,9 +268,9 @@ function nextTurn(r) {
 
 function checkWinner(r) {
   const a = active(r);
-  if (a.length <= 1 && r.status === 'playing') {
+  if (a.length <= (r.solo ? 0 : 1) && r.status === 'playing') {
     r.status = 'ended'; r.winner = a[0]?.id || null; r.phase = null;
-    log(r, `🏆 ${a[0]?.name} wins the game!`);
+    log(r, a[0] ? `🏆 ${a[0].name} wins the game!` : 'Practice game over: bankrupt!');
     return true;
   }
   return false;
@@ -381,7 +381,9 @@ function act(r, pid, a) {
     }
     if (type === 'start') {
       need(pid === r.hostId, 'Only the host can start.');
-      need(r.players.length >= 2, 'Need at least 2 players.');
+      need(r.players.length >= 1, 'Need at least 1 player.');
+      r.solo = r.players.length === 1;
+      if (r.solo) log(r, 'Solo practice game: play on your own to try the board and rules.');
       // roll for turn order
       const rolls = r.players.map(pl => { let x, y; return { id: pl.id, d: [x = die(), y = die()], t: x + y, tie: Math.random() }; });
       rolls.sort((m, n) => n.t - m.t || n.tie - m.tie);
@@ -621,7 +623,7 @@ function publicState(r) {
     props: r.props, housesLeft: r.housesLeft, hotelsLeft: r.hotelsLeft,
     phase: r.phase, rollAgain: r.rollAgain, lastRoll: r.lastRoll, pending: r.pending, auction: r.auction,
     debts: r.debts, trades: r.trades, card: r.card, log: r.log.slice(-120), txns: r.txns.slice(-200), winner: r.winner, version: r.version,
-    orderRolls: r.orderRolls || null,
+    orderRolls: r.orderRolls || null, solo: !!r.solo,
   };
 }
 
