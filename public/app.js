@@ -2,9 +2,9 @@
 (() => {
 // ================= data =================
 let BOARD = [], GROUPS = {}, COLORS = [];
-const SHORT = { 'Thiruvananthapuram': 'Trivandrum', 'CST Mumbai Railway': 'CST Mumbai Rly', 'Howrah Railway': 'Howrah Rly', 'New Delhi Railway': 'New Delhi Rly', 'Chennai Central Railway': 'Chennai Central Rly', 'Lockup / Visitor': 'Lockup / Visitor', 'Festival Holiday': 'Festival Holiday' };
-const ICON = { go: '💵', chest: '🏛️', chance: '🌀', tax: '🧾', rail: '🚆', jail: '🔐', free: '🪔', gotojail: '🚨' };
-const UTIL_ICON = { 'Power Grid': '⚡', 'Jal Board': '💧' };
+const SHORT = { 'CST Mumbai Railway': 'CST Mumbai Rly', 'Howrah Railway': 'Howrah Rly', 'New Delhi Railway': 'New Delhi Rly', 'Chennai Central Railway': 'Chennai Central Rly', 'Lockup / Visitor': 'Lockup / Visitor', 'Festival Holiday': 'Festival Holiday' };
+const ICON = { go: '💵', chest: '🏛️', chance: '🃏', tax: '🧾', rail: '🚆', jail: '🔐', free: '🪔', gotojail: '🚨' };
+const UTIL_ICON = { 'Power Grid': '⚡', 'Water Board': '💧' };
 
 const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -87,7 +87,7 @@ function setState(st) {
   // dice animation
   if (S.lastRoll && S.lastRoll.seq !== ui.seenRoll) {
     const anim = !ui.first; ui.seenRoll = S.lastRoll.seq; animateDice(S.lastRoll, anim);
-    if (anim) { const rp = P(S.lastRoll.by); if (rp) setTimeout(() => flashSq(rp.pos), 650); }
+    if (anim) { ui.holdUntil = Date.now() + 1300; const rp = P(S.lastRoll.by); if (rp) setTimeout(() => flashSq(rp.pos), 1350); }
   }
   if (S.card && S.card.seq !== ui.seenCard) { if (!ui.first) toast(`${P(S.card.by)?.name}: ${S.card.text}`, 4000); ui.seenCard = S.card.seq; }
   // wallet delta
@@ -115,7 +115,7 @@ function renderHome() {
   const existing = $('#hname')?.value ?? savedName;
   $('#app').innerHTML = `
   <div class="home">
-    <div class="logo"><div class="mark">₹</div><div><h1>Crore City</h1><div class="muted">Buy cities, collect rent, become a crorepati. 2–8 players.</div></div></div>
+    <div class="logo"><div class="mark">₹</div><div><h1>Crore City</h1><div class="muted">Buy cities, collect rent, become a crorepati. Play with 2–8 friends or practise solo.</div></div></div>
     <div class="card">
       <label for="hname">Your name</label>
       <input id="hname" maxlength="16" placeholder="e.g. Priya" value="${esc(existing)}" autocomplete="nickname">
@@ -133,6 +133,7 @@ function renderHome() {
       <button class="big" id="createBtn">Create a room</button>
       <div class="row" style="margin-top:12px"><input id="jcode" placeholder="Room code" maxlength="8" style="text-transform:uppercase"><button class="sec" id="joinCodeBtn">Join</button></div>
     </div>`}
+    <div class="card"><h3>The board</h3>${previewBoard({ props: {}, players: [], order: [], turn: 0 })}</div>
     <div class="card muted">
       <b>How it works:</b> create a room, share the link, everyone picks a name and colour, and the host starts. Everyone begins with ₹15 Cr and gets ₹2 Cr for passing Payday. Prices are in crores. If you drop out, open the same link on the same device to rejoin.
     </div>
@@ -146,6 +147,13 @@ function renderHome() {
 }
 
 function shareLink() { return `${location.origin}/r/${S.code}`; }
+function previewBoard(st) {
+  const saved = S; S = st;
+  try {
+    const sq = BOARD.map(s => { const [r, c, side] = coord(s.i); const corner = [0, 10, 20, 30].includes(s.i); return `<div class="sq ${corner ? 'corner' : 'side-' + side}" style="grid-row:${r};grid-column:${c}">${sqHTML(s)}</div>`; }).join('');
+    return `<div class="boardwrap preview"><div class="board">${sq}<div class="center"><img class="indiamap" src="/india.svg" alt="" aria-hidden="true"><div class="gname">CRORE CITY</div><div class="muted" style="font-size:clamp(10px,2.4cqi,15px)">Board preview</div></div></div></div>`;
+  } finally { S = saved; }
+}
 function renderLobby() {
   const isHost = S.hostId === me; const mp = meP();
   const taken = new Set(S.players.filter(p => p.id !== me).map(p => p.color));
@@ -165,9 +173,10 @@ function renderLobby() {
       <div class="swatches">${COLORS.map(c => `<button class="sw ${c === mp?.color ? 'sel' : ''} ${taken.has(c) ? 'taken' : ''}" style="background:${c}" data-c="${c}" ${taken.has(c) ? 'disabled' : ''}></button>`).join('')}</div>
     </div>
     <div class="card">
-      ${isHost ? `<button class="big" id="startBtn" ${S.players.length < 2 ? 'disabled' : ''}>Start game</button><p class="muted" style="text-align:center">${S.players.length < 2 ? 'Waiting for at least one more player…' : 'Turn order is decided by a dice roll when you start.'}</p>` : `<p style="text-align:center">Waiting for <b>${esc(P(S.hostId)?.name)}</b> to start the game…</p>`}
+      ${isHost ? `<button class="big" id="startBtn">${S.players.length < 2 ? 'Start a solo practice game' : 'Start game'}</button><p class="muted" style="text-align:center">${S.players.length < 2 ? 'Share the link to play with friends, or practise on your own now. Friends can’t join once the game starts.' : 'Turn order is decided by a dice roll when you start.'}</p>` : `<p style="text-align:center">Waiting for <b>${esc(P(S.hostId)?.name)}</b> to start the game…</p>`}
       <p class="muted" style="text-align:center"><a href="/" id="leave">Leave room</a></p>
     </div>
+    <div class="card"><h3>The board</h3>${previewBoard(S)}</div>
   </div>`;
   $('#copyBtn').onclick = () => { navigator.clipboard?.writeText(shareLink()).then(() => toast('Link copied'), () => toast(shareLink())); };
   if ($('#shareBtn')) $('#shareBtn').onclick = () => navigator.share({ title: 'Crore City', text: `Join my Crore City game! Room ${S.code}`, url: shareLink() }).catch(() => {});
@@ -206,19 +215,34 @@ function buildGame() {
     b.appendChild(d);
   });
   const center = document.createElement('div'); center.className = 'center'; center.id = 'center';
-  center.innerHTML = `<div class="gname">CRORE CITY</div><div class="dice"><div class="die" id="d1"></div><div class="die" id="d2"></div></div><div class="turnline" id="turnline"></div><div id="cardshow"></div>`;
+  center.innerHTML = `<img class="indiamap" src="/india.svg" alt="" aria-hidden="true"><div class="gname">CRORE CITY</div><div class="dicebox"><div class="tosser" id="t1"><div class="cube" id="d1"></div></div><div class="tosser" id="t2"><div class="cube" id="d2"></div></div></div><div id="cardshow"></div>`;
   b.appendChild(center);
-  drawDie($('#d1'), 1); drawDie($('#d2'), 1);
+  buildCube($('#d1')); buildCube($('#d2')); setCube($('#d1'), 1, false); setCube($('#d2'), 2, false);
 }
-function drawDie(el, n) {
-  const pips = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] }[n];
-  el.innerHTML = Array.from({ length: 9 }, (_, k) => `<i style="visibility:${pips.includes(k) ? 'visible' : 'hidden'}"></i>`).join('');
+const PIPS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+const FACE_ROT = { 1: [0, 0], 2: [0, -90], 3: [-90, 0], 4: [90, 0], 5: [0, 90], 6: [0, 180] };
+function buildCube(el) {
+  el.innerHTML = [1, 2, 3, 4, 5, 6].map(n => `<div class="face f${n}">${Array.from({ length: 9 }, (_, k) => `<i style="visibility:${PIPS[n].includes(k) ? 'visible' : 'hidden'}"></i>`).join('')}</div>`).join('');
+  el._spins = 0;
+}
+function setCube(el, n, tumble) {
+  const [x, y] = FACE_ROT[n];
+  if (tumble) el._spins = (el._spins || 0) + 2 + Math.floor(Math.random() * 2);
+  const k = (el._spins || 0) * 360;
+  el.style.transition = tumble ? '' : 'none';
+  el.style.transform = `rotateX(${x + k}deg) rotateY(${y + k}deg) rotateZ(${tumble ? k : 0}deg)`;
+  if (!tumble) { void el.offsetWidth; el.style.transition = ''; }
+}
+function spinDice() { // instant feedback while waiting for the server
+  ['#d1', '#d2'].forEach(s => { const d = $(s); if (d) d.classList.add('spin'); });
+  
 }
 function animateDice(roll, anim) {
   const d1 = $('#d1'), d2 = $('#d2'); if (!d1) return;
-  if (!anim) { drawDie(d1, roll.d1); drawDie(d2, roll.d2); return; }
-  d1.classList.add('rolling'); d2.classList.add('rolling');
-  let k = 0; const iv = setInterval(() => { drawDie(d1, 1 + Math.floor(Math.random() * 6)); drawDie(d2, 1 + Math.floor(Math.random() * 6)); if (++k > 7) { clearInterval(iv); d1.classList.remove('rolling'); d2.classList.remove('rolling'); drawDie(d1, roll.d1); drawDie(d2, roll.d2); } }, 80);
+  d1.classList.remove('spin'); d2.classList.remove('spin');
+  if (!anim) { setCube(d1, roll.d1, false); setCube(d2, roll.d2, false); return; }
+  ['#t1', '#t2'].forEach((s, i) => { const t = $(s); t.classList.remove('toss-l', 'toss-r'); void t.offsetWidth; t.classList.add(i ? 'toss-r' : 'toss-l'); });
+  requestAnimationFrame(() => { setCube(d1, roll.d1, true); setCube(d2, roll.d2, true); });
 }
 function flashSq(i) { const e = $('#sq' + i); if (!e) return; e.classList.remove('hl'); void e.offsetWidth; e.classList.add('hl'); }
 
@@ -235,11 +259,14 @@ function sqHTML(s) {
   const price = s.price ? (owner ? esc(owner.name.slice(0, 6)) : fmt(s.price).replace('₹', '₹').replace(' Cr', 'Cr')) : (s.amount ? fmt(s.amount).replace(' Cr', 'Cr') : '');
   const toks = S.players.filter(p => !p.bankrupt && p.pos === s.i).map(p => `<span class="tok ${p.id === me ? 'me' : ''} ${cur()?.id === p.id ? 'turn' : ''}" style="background:${p.color}" title="${esc(p.name)}"></span>`).join('');
   const jailNote = s.i === 10 && S.players.some(p => p.inJail && !p.bankrupt) ? `<div class="pr">🔒 ${S.players.filter(p => p.inJail && !p.bankrupt).length} inside</div>` : '';
-  return `${band}<div class="txt">${ic ? `<div class="ic">${ic}</div>` : ''}<div class="nm ${(SHORT[s.name] || s.name).split(' ').some(w => w.length >= 9) ? 'long' : ''}">${nm}</div>${jailNote}<div class="pr">${price}</div></div><div class="tokens">${toks}</div>`;
+  return `<div class="inner">${band}<div class="txt">${ic ? `<div class="ic">${ic}</div>` : ''}<div class="nm">${nm}</div>${jailNote}<div class="pr">${price}</div></div><div class="tokens">${toks}</div></div>`;
 }
 
 function renderGame() {
   if (!S || S.status === 'lobby') return;
+  // let the dice land before tokens move and prompts appear
+  const wait = (ui.holdUntil || 0) - Date.now();
+  if (wait > 0) { clearTimeout(ui.holdTimer); ui.holdTimer = setTimeout(renderGame, wait + 20); return; }
   const mp = meP();
   $('#roomcode').textContent = 'Room ' + S.code;
   $('#walletAmt').textContent = mp ? fmt(mp.cash) : '—';
@@ -250,8 +277,8 @@ function renderGame() {
     setHTML(el, sqHTML(s));
   });
   const c = cur();
-  setHTML($('#turnline'), S.status === 'ended' ? `🏆 ${esc(P(S.winner)?.name || '')} wins!` : `<span class="dot" style="background:${c.color}"></span> ${c.id === me ? 'Your turn' : esc(c.name) + "'s turn"}${c.connected ? '' : ' (offline)'}`);
-  setHTML($('#cardshow'), S.card ? `<div class="cardshow ${S.card.deck}"><b>${S.card.deck === 'chance' ? '🌀 Twist' : '🏛️ City Fund'}</b><br>${esc(S.card.text)}</div>` : '');
+  setHTML($('#turnline'), S.status === 'ended' ? (S.winner ? `🏆 ${esc(P(S.winner)?.name || '')} wins!` : 'Practice game over') : `<span class="dot" style="background:${c.color}"></span> ${c.id === me ? 'Your turn' : esc(c.name) + "'s turn"}${c.connected ? '' : ' (offline)'}`);
+  setHTML($('#cardshow'), S.card ? `<div class="cardshow ${S.card.deck}"><b>${S.card.deck === 'chance' ? '🃏 Twist' : '🏛️ City Fund'}</b><br>${esc(S.card.text)}</div>` : '');
   renderAction();
   renderTabs();
 }
@@ -260,7 +287,7 @@ function renderAction() {
   const mp = meP(); const c = cur(); const el = $('#action');
   if (S.status === 'ended') {
     const ranked = [...S.players].sort((a, b) => (b.id === S.winner) - (a.id === S.winner) || b.cash - a.cash);
-    setHTML(el, `<div class="winner">🏆 ${esc(P(S.winner)?.name)} wins!</div><ul class="plist">${ranked.map(p => `<li><span class="dot" style="background:${p.color}"></span>${esc(p.name)}<span class="grow"></span>${p.bankrupt ? 'Bankrupt' : fmt(p.cash)}</li>`).join('')}</ul><button class="big sec" id="newGame">New game</button>`);
+    setHTML(el, `<div class="winner">${S.winner ? `🏆 ${esc(P(S.winner)?.name)} wins!` : 'Practice game over'}</div><ul class="plist">${ranked.map(p => `<li><span class="dot" style="background:${p.color}"></span>${esc(p.name)}<span class="grow"></span>${p.bankrupt ? 'Bankrupt' : fmt(p.cash)}</li>`).join('')}</ul><button class="big sec" id="newGame">New game</button>`);
     $('#newGame').onclick = () => { saveSess(null); location.href = '/'; };
     return;
   }
@@ -299,7 +326,7 @@ function renderAction() {
   if (!mp?.bankrupt && S.players.filter(p => !p.bankrupt).length > 1) h += `<div style="height:10px"></div><button class="sec big" id="dealBtn">🤝 Propose a deal</button>`;
   setHTML(el, h);
   const on = (id, f) => { const b = $('#' + id); if (b) b.onclick = f; };
-  on('rollBtn', () => act('roll')); on('payJail', () => act('payJail')); on('useCard', () => act('useCard'));
+  on('rollBtn', () => { spinDice(); act('roll'); }); on('payJail', () => act('payJail')); on('useCard', () => act('useCard'));
   on('buyBtn', () => act('buy')); on('aucBtn', () => act('auction')); on('endBtn', () => act('endTurn'));
   on('payDebt', () => act('payDebt')); on('bankrupt', () => confirmModal('Declare bankruptcy?', 'You will be out of the game and your assets go to your creditor.', () => act('bankrupt')));
   on('dealBtn', () => openCompose()); on('skipBtn', () => act('skip'));
@@ -505,6 +532,13 @@ function openIncoming(id) {
   $('#tCounter', r).onclick = () => openCompose({ to: t.from, replaces: t.id, give: { ...t.get, props: [...t.get.props] }, get: { ...t.give, props: [...t.give.props] } });
 }
 
+// keep rotated side-square contents sized to the real square
+const boardRO = new ResizeObserver(es => es.forEach(e => sizeBoard(e.target)));
+function sizeBoard(b) {
+  const s = b.querySelector('.side-l'); if (!s) return;
+  b.style.setProperty('--w', s.clientWidth + 'px'); b.style.setProperty('--h', s.clientHeight + 'px');
+}
+new MutationObserver(() => document.querySelectorAll('.board').forEach(b => { if (!b._ro) { b._ro = 1; boardRO.observe(b); } sizeBoard(b); })).observe(document.getElementById('app'), { childList: true, subtree: false });
 // ================= boot =================
 fetch('/board.json').then(r => r.json()).then(d => {
   BOARD = d.board; GROUPS = d.groups; COLORS = d.colors;

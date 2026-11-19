@@ -10,6 +10,10 @@ Players create a room, share a link, and trade their way across a 40-square boar
 |---|---|
 | ![Desktop view](docs/desktop.png) | ![Phone view](docs/phone.png) |
 
+| Dice rolling in the centre of the board | Board preview on the home screen |
+|---|---|
+| ![Dice roll](docs/dice-roll.png) | ![Home preview](docs/home-preview.png) |
+
 | Auction with live calculator | Proposing a deal |
 |---|---|
 | ![Auction](docs/auction.png) | ![Deal](docs/deal.png) |
@@ -29,6 +33,7 @@ Everyone starts with **₹15 Cr** and collects **₹2 Cr** each time they pass *
 
 ### Multiplayer
 - Create/join rooms with a short code and a shareable link; 2–8 players
+- See the full board from the home screen and lobby, or start a solo practice game on your own
 - Real-time sync over WebSockets, so every device shows the same board instantly
 - Server-authoritative game state: clients send actions, the server validates every rule
 - Disconnect-proof: reopen the link on the same device, or type the same name on a new one, and you're back with your money and cards
@@ -44,7 +49,7 @@ Everyone starts with **₹15 Cr** and collects **₹2 Cr** each time they pass *
 ### Rules
 - Dice with doubles (three doubles in a row sends you to the Lockup)
 - The Lockup: roll doubles, pay ₹0.5 Cr bail, or use a Bail Pass; pay after three failed tries
-- 8 colour sets, 4 railways, 2 utilities, GST Bill and Wealth Tax squares, Festival Holiday
+- 8 colour sets (the top Metros set is Delhi and Mumbai), 4 railways, 2 utilities, GST Bill and Wealth Tax squares, Festival Holiday
 - 32 original **Twist** and **City Fund** cards
 - Full colour set doubles base rent; ◆ houses and ★ hotels with the even-build rule and a limited bank supply (32 / 12)
 - **Mortgage** any property without buildings for half its price; **unmortgage** for that amount plus 10%. Mortgaged cities collect no rent and are hatched on the board
@@ -59,7 +64,8 @@ Everyone starts with **₹15 Cr** and collects **₹2 Cr** each time they pass *
 ### UX
 - Responsive layout: board and side panel on laptops, stacked layout on phones
 - Owner colour outline on every owned square, houses and hotels drawn on the colour band
-- Dice animation, pulsing token for the player whose turn it is, card pop-ups
+- Red 3D dice that tumble into the centre of the board on every roll, with the total and a doubles badge; tokens move once the dice land
+- Pulsing token for the player whose turn it is, card pop-ups
 - Tap any square for its full rent table; tap any player to see their cards
 
 ## Tech stack
@@ -117,3 +123,5 @@ On Render's free plan the server sleeps after about 15 minutes with no visitors,
 ## Credits
 
 An original game design: board layout, city sets, card text, names and visuals are all original. Built with help from Claude.
+
+Map of India from [svg-maps](https://github.com/VictorCazanave/svg-maps) by Victor Cazanave, licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (colours changed).
